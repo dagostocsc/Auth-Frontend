@@ -13,9 +13,20 @@ const CampusCard = ({ campus, API_URL, fetchAllCampuses }) => {
   const handleDelete = async () => {
     const confirm = window.confirm(`Are you sure you want to delete ${campus.name}?`);
     if (!confirm) return;
+    
+  const token = localStorage.getItem("token"); 
+
+  if(!token){
+    alert("You have to be logged in to delete a campus!");
+    return;
+  }
 
     try {
-      await axios.delete(`${API_URL}/api/campuses/${campus.id}`);
+      await axios.delete(`${API_URL}/api/campuses/${campus.id}`,{
+        headers:{
+          Authorization: `Bearer ${token}`,
+        },
+    });
       fetchAllCampuses();
     } catch (e) {
       console.error("Error deleting campus", e);
