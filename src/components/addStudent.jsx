@@ -1,109 +1,103 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import axios from "axios";
-import ".//StudentStyles.css";
+import "./StudentStyles.css";
 
-
-const API_URL = "https://crud-backend-black-kappa.vercel.app";
-
-const AddStudent = ({ fetchAllStudents }) => {
+const AddStudent = ({ fetchAllStudents, API_URL }) => {
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     email: "",
+    imageURL: "",
     gpa: "",
-    imageUrl: "",
+    campusId: "",
   });
   const [error, setError] = useState("");
 
   const navigate = useNavigate();
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  const { firstName, lastName, email, gpa } = formData;
+  const handleSubmit = async (event) => {
+    event.preventDefault();
 
-  if (!firstName.trim() || !lastName.trim() || !email.trim()) {
-    setError("First name, last name, and email are required.");
-    return;
-  }
+    const token = localStorage.getItem("token"); 
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    setError("Please enter a valid email address.");
-    return;
-  }
+    if (!token) {
+      setError("You must be logged in to add a student.");
+      return;
+    }
 
-  const parsedGpa = parseFloat(gpa);
-  if (isNaN(parsedGpa) || parsedGpa < 0.0 || parsedGpa > 4.0) {
-    setError("GPA must be between 0.0 and 4.0.");
-    return;
-  }
+    const { firstName, lastName, email } = formData;
+    if (!firstName || !lastName || !email) {
+      setError("First name, last name, and email are required.");
+      return;
+    }
 
-  const newStudent = {
-    ...formData,
-    gpa: parsedGpa,
-    imageUrl:
-      formData.imageUrl ||
-      "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png",
+    try {
+      await axios.post(`${API_URL}/api/students`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      fetchAllStudents();
+      navigate("/students");
+    } catch (e) {
+      console.error("Error adding student", e);
+      setError("Something went wrong. Please try again.");
+    }
   };
-
-  try {
-    await axios.post(`${API_URL}/api/students`, newStudent);
-    if (fetchAllStudents) fetchAllStudents(); // Optional refresh
-    navigate("/students");
-  } catch (err) {
-    console.error("Error adding student:", err);
-    setError("Failed to add student.");
-  }
-};
-
 
   return (
     <div className="add-student-form">
-      <h2>Add New Student</h2>
-      {error && <p style={{ color: "red" }}>{error}</p>}
-
+      <h1>Add a Student</h1>
+      {error && <p className="error-message">{error}</p>}
       <form onSubmit={handleSubmit}>
-        <label>First Name:</label>
+        <label>First Name</label>
         <input
+          type="text"
           value={formData.firstName}
           onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
         />
 
-        <label>Last Name:</label>
+        <label>Last Name</label>
         <input
+          type="text"
           value={formData.lastName}
           onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
         />
 
-        <label>Email:</label>
+        <label>Email</label>
         <input
+          type="email"
           value={formData.email}
           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
         />
 
-        <label>GPA:</label>
+        <label>GPA</label>
         <input
-            type="number"
-            name="gpa"
-            id="gpa"
-            value={formData.gpa}
-            onChange={(e) => setFormData({ ...formData, gpa: e.target.value })}
-            min="0"
-            max="4"
-            step="0.1"
-            className={error.includes("GPA") ? "error" : ""}
-         />
-
-        <label>Image URL:</label>
-        <input
-          value={formData.imageUrl}
-          onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+          type="number"
+          step="0.01"
+          value={formData.gpa}
+          onChange={(e) => setFormData({ ...formData, gpa: e.target.value })}
         />
 
-        {formData.imageUrl && (
+        <label>Campus ID</label>
+        <input
+          type="text"
+          value={formData.campusId}
+          onChange={(e) => setFormData({ ...formData, campusId: e.target.value })}
+        />
+
+        <label>Image URL</label>
+        <input
+          type="text"
+          value={formData.imageURL}
+          onChange={(e) => setFormData({ ...formData, imageURL: e.target.value })}
+        />
+
+        {formData.imageURL && (
           <div style={{ margin: "1rem 0" }}>
-            <img src={formData.imageUrl} alt="Student Preview" width="150" />
+            <img src={formData.imageURL} alt="Student preview" width="200" />
           </div>
         )}
 
