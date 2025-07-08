@@ -1,9 +1,31 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import axios from "axios";
 import ".//StudentStyles.css";
 
+const AllStudents = ({ students, API_URL, fetchAllStudents }) => {
+  const handleDelete = async (id, name) => {
+    const confirm = window.confirm(`Delete ${name}?`);
+    if (!confirm) return;
 
-const AllStudents = ({ students }) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("You must be logged in to delete a student.");
+      return;
+    }
+
+    try {
+      await axios.delete(`${API_URL}/api/students/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      fetchAllStudents();
+    } catch (err) {
+      console.error("Error deleting student:", err);
+    }
+  };
+
   return (
     <div className="all-students">
       <div className="students-header">
@@ -33,6 +55,14 @@ const AllStudents = ({ students }) => {
                 </Link>
                 <p>Email: {student.email}</p>
                 <p>GPA: {isNaN(student.gpa) ? "N/A" : Number(student.gpa).toFixed(2)}</p>
+                {localStorage.getItem("token") && (
+                  <button
+                    className="btn-delete"
+                    onClick={() => handleDelete(student.id, student.firstName)}
+                  >
+                    🗑️ Delete
+                  </button>
+                )}
               </div>
             </div>
           ))
