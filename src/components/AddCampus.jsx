@@ -18,6 +18,13 @@ const AddCampus = ({ fetchAllCampuses, API_URL }) => {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
+    const token =localStorage.getItem("token");
+
+    if (!token) {
+      setError("Not logged in to add a campus.");
+      return;
+    }
+
     const { name, description, address } = formData;
     if (!name || !address || !description) {
       setError("Name, address, and description are required.");
@@ -25,7 +32,11 @@ const AddCampus = ({ fetchAllCampuses, API_URL }) => {
     }
 
     try {
-      await axios.post(`${API_URL}/api/campuses`, formData);
+      await axios.post(`${API_URL}/api/campuses`, formData, {
+        headers:{
+          Authorization: `Bearer ${token}`,
+        },
+      });
       fetchAllCampuses();
       navigate("/campuses");
     } catch (e) {
